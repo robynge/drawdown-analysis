@@ -10,21 +10,35 @@ Analyze drawdowns and stock contributions for ARK ETFs
 ## Methodology
 
 ### Drawdown Calculation
-1. **Identify Peaks and Troughs**: Find local maxima (peaks) and subsequent minima (troughs) in ETF price
-2. **Calculate Drawdown Depth**: `Drawdown = (Trough_Price - Peak_Price) / Peak_Price × 100%`
-3. **Non-overlapping Periods**: After finding the largest drawdown, split timeline and recursively find next largest in remaining periods
-4. **Ranking**: Sort drawdowns by depth (most negative first)
+ETF
+day1 etf return = (day1 ETF price - day0 ETF price)/day0 ETF price
+day1 ETF MV = sum of every stock's (day1 stock position * day1 stock price)
+day1 ETF inflows/outflows = sum of every stock's stock inflows/outflows
+day1 ETF dollar pnl = day0 ETF MV * day1 etf return
+day1 ETF adj pnl = day1 ETF dollar pnl - day1 ETF inflows/outflows
 
-### Stock Contribution Analysis
-1. **Market Value Change**: For each stock, calculate `Stock_MV_change = Stock_MV_trough - Stock_MV_peak`
-2. **ETF Change**: Calculate `ETF_MV_change = ETF_MV_trough - ETF_MV_peak`
-3. **Contribution Percentage**: `Contribution = Stock_MV_change / ETF_MV_change × 100%`
-4. **Interpretation**: Shows what percentage of ETF's total decline is attributable to each stock
-5. **Negative Contributors**: Identify stocks with positive contributions (helped ETF fall) still in current holdings
 
-### Portfolio Metrics
-- **Portfolio Return**: `(Last_Price - First_Price) / First_Price × 100%`
-- **RoMaD**: `Portfolio_Return / |Maximum_Drawdown|` (Risk-adjusted return metric)
+Holdings
+day1 stock return = (day1 stock price - day0 stock price)/day0 stock price
+day1 stock MV = day1 stock price * day1 stock position
+
+
+Ongoing holding(Day0 > 0 & Day1 > 0)
+day1 stock dollar pnl = day1 stock MV - day0 stock MV
+day1 stock inflows/outflows = (day1 stock position - day0 stock position) * (day1 stock price + day0 stock price)/2
+day1 stock adj pnl = day1 stock dollar pnl - day1 stock inflows/outflows
+
+Entry position(Day0 = 0, Day1 > 0)
+day0 stock dollar pnl = 0
+day1 stock dollar pnl = day1 stock MV - day0 stock MV
+day1 stock inflows = day1 stock position * day1 stock price
+day1 stock adj pnl = day1 stock dollar pnl - day1 stock inflows/outflows
+
+Exit position(Day0 > 0, Day1 = 0)
+day1 stock MV = 0
+day1 stock outflows = -day0 stock position * day0 stock price
+day1 stock dollar pnl = day1 stock outflows
+day1 stock adj pnl = 0
 
 ## Usage
 ```bash

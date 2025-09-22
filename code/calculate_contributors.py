@@ -62,21 +62,37 @@ def calculate_daily_metrics(df):
 
     df['stock MV'] = df['calculated_stock_price'] * df['Position']
 
-    # Calculate stock dollar pnl as current MV - previous MV
+    # Calculate stock dollar pnl based on position status
     df['stock dollar pnl'] = df.apply(lambda row:
-        row['stock MV'] - row['prev_mv'] if row['is_continuous'] and not pd.isna(row['prev_mv']) else 0,
+        # Ongoing holding: day1 MV - day0 MV
+        row['stock MV'] - row['prev_mv'] if row['is_continuous'] and not pd.isna(row['prev_mv']) else
+        # Entry position: day1 MV - day0 MV (where day0 MV = 0)
+        row['stock MV'] if row['is_entry'] else
+        # Exit position: dollar pnl = outflows
+        -row['prev_position'] * row['prev_price'] if row['is_exit'] and not pd.isna(row['prev_position']) and not pd.isna(row['prev_price']) else
+        0,
         axis=1
     )
 
     # Calculate inflows/outflows based on position status
     df['stock inflows/outflows'] = df.apply(lambda row:
+        # Entry position: inflows = day1 position * day1 price
         row['Position'] * row['calculated_stock_price'] if row['is_entry'] else
-        -row['prev_position'] * row['prev_price'] if row['is_exit'] else
-        (row['Position'] - row['prev_position']) * (row['calculated_stock_price'] + row['prev_price']) / 2,
+        # Exit position: outflows = -day0 position * day0 price
+        -row['prev_position'] * row['prev_price'] if row['is_exit'] and not pd.isna(row['prev_position']) and not pd.isna(row['prev_price']) else
+        # Ongoing holding: (day1 position - day0 position) * (day1 price + day0 price)/2
+        (row['Position'] - row['prev_position']) * (row['calculated_stock_price'] + row['prev_price']) / 2 if not pd.isna(row['prev_position']) and not pd.isna(row['prev_price']) else 0,
         axis=1
     )
 
-    df['stock adj pnl'] = df['stock dollar pnl'] - df['stock inflows/outflows']
+    # Calculate adjusted pnl based on position status
+    df['stock adj pnl'] = df.apply(lambda row:
+        # Ongoing holding and Entry: dollar pnl - inflows/outflows
+        row['stock dollar pnl'] - row['stock inflows/outflows'] if row['is_continuous'] or row['is_entry'] else
+        # Exit position: adj pnl = 0
+        0 if row['is_exit'] else 0,
+        axis=1
+    )
 
     # Aggregate stock inflows/outflows to ETF level
     etf_inflows = df.groupby('Date')['stock inflows/outflows'].sum()
