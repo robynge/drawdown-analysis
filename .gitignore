@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Local files
+.claude/
+*.local.json
+PROJECT_CONTEXT.md
+CLAUDE_NOTES.md
+GITHUB_COMMIT_RULES.md
+*CLAUDE*.md
+
+# Data files (uncomment if you don't want to track large Excel files)
+# input/*.xlsx
+# input/*.csv
