@@ -120,8 +120,6 @@ if __name__ == '__main__':
     etfs = ['ARKK', 'ARKQ', 'ARKW', 'ARKG', 'ARKF', 'ARKX']
 
     for etf in etfs:
-        print(f"Processing {etf}...")
         holdings_df = load_holdings_data(etf)
         stock_df, etf_metrics = calculate_daily_metrics(holdings_df)
         save_results(etf, stock_df, etf_metrics)
-        print(f"Saved {etf}_daily_metrics.xlsx")

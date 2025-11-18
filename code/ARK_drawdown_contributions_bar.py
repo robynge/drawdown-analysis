@@ -8,8 +8,11 @@ def get_drawdown_contributions(etf_name, drawdown_idx):
     base_dir = Path(__file__).parent.parent
 
     # Read drawdown dates
-    drawdown_file = base_dir / 'output' / f'{etf_name}_drawdown_2025.xlsx'
-    drawdowns = pd.read_excel(drawdown_file, sheet_name='Top_10_Drawdowns')
+    drawdown_file = base_dir / 'output' / f'{etf_name}_drawdown_2024-2025.xlsx'
+    all_drawdowns = pd.read_excel(drawdown_file, sheet_name='Drawdowns')
+
+    # Skip Current_Drawdown row
+    drawdowns = all_drawdowns[all_drawdowns['rank'] != 'Current'].reset_index(drop=True)
 
     if drawdown_idx >= len(drawdowns):
         return None, None, None
@@ -33,7 +36,6 @@ def get_drawdown_contributions(etf_name, drawdown_idx):
     # Keep all stocks, including those with zero contribution
     contributions = contributions.sort_values()
 
-    print(f"      Found {len(contributions)} stocks total ({len(contributions[contributions != 0])} non-zero)")
 
     return contributions, peak_date, trough_date
 
@@ -76,7 +78,6 @@ def create_bar_chart(contributions, title, save_path, max_stocks=None):
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
 
-    print(f"    Saved: {save_path.name}")
 
 def main():
     etfs = ['ARKK', 'ARKQ', 'ARKW', 'ARKG', 'ARKF', 'ARKX']
@@ -86,7 +87,6 @@ def main():
         output_dir = base_dir / 'output' / 'contribution_charts' / etf_name
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        print(f"\nProcessing {etf_name}...")
 
         all_contributions = pd.Series(dtype=float)
 
@@ -95,7 +95,6 @@ def main():
             contributions, peak_date, trough_date = get_drawdown_contributions(etf_name, idx)
 
             if contributions is not None:
-                print(f"  Drawdown {idx+1}: {peak_date.strftime('%Y-%m-%d')} to {trough_date.strftime('%Y-%m-%d')}")
 
                 # Create individual drawdown chart
                 title = f'{etf_name} Drawdown {idx+1} ({peak_date.strftime("%Y-%m-%d")} to {trough_date.strftime("%Y-%m-%d")})'
@@ -111,9 +110,7 @@ def main():
             title = f'{etf_name} - Total Contributions (Sum of All 10 Drawdowns)'
             save_path = output_dir / f'{etf_name}_total.png'
             create_bar_chart(all_contributions, title, save_path)
-            print(f"  Created total chart")
 
-    print("\nAll charts created successfully!")
 
 if __name__ == '__main__':
     main()
